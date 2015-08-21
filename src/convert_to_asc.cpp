@@ -39,7 +39,7 @@
 
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/io/pcd_io.h>
-#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/console/print.h>
 #include <pcl/console/parse.h>
 #include <pcl/console/time.h>
@@ -50,137 +50,116 @@ using namespace pcl;
 using namespace pcl::io;
 using namespace pcl::console;
 
-float       leaf_size = 0.1f;
-std::string default_field ("z");
-double      default_filter_min = -std::numeric_limits<double>::max ();
-double      default_filter_max = std::numeric_limits<double>::max ();
+int		MeanK=50;
+float	StddevMulThresh=1.0f;
+
+
+bool saveASC(std::string fileName,pcl::PointCloud<PointXYZ>::Ptr p)
+{
+	std::ofstream fs;
+	fs.open(fileName.c_str());
+	if (!fs.is_open()) return false;
+	for (int i =0; i < p->size(); i++)
+	{
+		fs << (*p)[i].x <<" "<< (*p)[i].y << " " <<(*p)[i].z <<"\n";
+	}
+	fs.close();
+	return true; 
+}
+
+
 
 int main (int argc, char** argv)
 {
 	if(argc<3)
 	{
 		std::cout << "Usage:\n";
-		std::cout << argv[0] << " input_model.xml output_model.xml parameters\n";
-		std::cout << " -l <leaf_size>\t\tSet the voxel grid leaf size. Default: " << leaf_size << std::endl;
-	
+		std::cout << argv[0] << " input_model.xml output_model.xml\n";
+
 		return -1;
 	}
-	
+
 	std::vector<int> xml_indices;
 	xml_indices = pcl::console::parse_file_extension_argument (argc, argv, ".xml");
-	
+
 	if(xml_indices.size()!=2)
 	{
 		return -2;
 	}
 
+
 	std::string param_inputModel = argv[xml_indices[0]];
 	std::string param_outputModel = argv[xml_indices[1]];
-	std::string param_leaf_size;
-
-	pcl::console::parse_argument (argc, argv, "-l", leaf_size);
-
-	//Generate text from values of parameters
-	std::ostringstream ss;
-    ss << std::fixed << std::setprecision(3);
-	ss << leaf_size;
-	param_leaf_size=ss.str();
-
-	std::cout << "voxel grid leaf size = " << param_leaf_size << "\n";
 
 	/// models
 	data_model inputModel;
 	data_model outputModel;
-	inputModel.loadFile(param_inputModel);
-	
+
 	if(!inputModel.loadFile(param_inputModel))
 	{
 		std::cout << "Error loading: " << param_inputModel << std::endl;
-		return -2;
+		return -3;
 	}
 	std::cout << "Loaded: " << param_inputModel << " correctly.\n";
 
 	/// create new path for data
 	boost::filesystem::path pathinputXML(param_inputModel);
 	boost::filesystem::path pathouputXML(param_outputModel);
-
 	boost::filesystem::path pathOfNewDataDirectory = pathouputXML.parent_path();
-	std::string relativePathToData = "data_subsampled_"+param_leaf_size;
+
+	
+	//generate absolute path
+	std::string relativePathToData = "asc_data";
 	pathOfNewDataDirectory/=relativePathToData;
 
-	/// create new directory for data
-	std::cout <<"creating directory (if does not exist):" << pathOfNewDataDirectory << std::endl;
+	// create new directory for data
+	std::cout <<"creating directory (if does not exist):" << pathOfNewDataDirectory <<"\n";
 	if(!boost::filesystem::create_directories(pathOfNewDataDirectory))
 	{
 		if(!boost::filesystem::is_directory(pathOfNewDataDirectory))
 		{
 			std::cout<<"Could not create dir: "<< pathOfNewDataDirectory << std::endl;
-			return -3;
+			return -4;
 		}
 	}
 
-	/// save relative path to model's data
+	// save relative path to model's data
 	outputModel.setDataSetPath(relativePathToData);
-	
-	/// loads clouds ids in input model
+
+	// loads clouds ids in input model
 	std::vector <std::string> cloud_ids;
 	inputModel.getAllScansId(cloud_ids);
-	
-	/// sets some info about algorithm
-	outputModel.setAlgorithmName("Voxel grid subsampling");
-	outputModel.addAlgorithmParam("leaf_size",  param_leaf_size);
+
+
 	
 	std::cout <<"pointclouds count: "<< cloud_ids.size() <<"\n";
-	
+
 	double totalTime=0;
-	
+
 	for (int i=0; i < cloud_ids.size(); i++)
 	{
 		//we take full path of pointcloud in input model ...
 		boost::filesystem::path inputFn (inputModel.getFullPathOfPointcloud(cloud_ids[i]));
 		// ... and get only filename for ouput
-		std::string outputFn = (pathOfNewDataDirectory/(inputFn.filename())).string();
+		std::string outputFnOnly = cloud_ids[i]+".3d";
+		std::string outputFn = (pathOfNewDataDirectory/boost::filesystem::path(outputFnOnly)).string();
 
-		pcl::PCLPointCloud2::Ptr inputCloud (new pcl::PCLPointCloud2());
-		pcl::PCLPointCloud2::Ptr outputCloud (new pcl::PCLPointCloud2());
+		pcl::PointCloud<pcl::PointXYZ>::Ptr inputCloud (new pcl::PointCloud<pcl::PointXYZ>());
 		std::cout <<"loading pointcloud:" << inputFn<<"\n";
 		pcl::io::loadPCDFile(inputFn.string(), *inputCloud);
 
-		// Create the filtering object
-		VoxelGrid<pcl::PCLPointCloud2> grid;
-		grid.setInputCloud (inputCloud);
-		grid.setLeafSize (leaf_size, leaf_size, leaf_size);
-
-		//Measure the computation time
-		pcl::StopWatch sw;
-		sw.reset();
-		grid.filter (*outputCloud);
-		double exTime = sw.getTime();
-
-		std::cout << "Size before: " << inputCloud->height*inputCloud->width << " Size after: "<<outputCloud->height*outputCloud->width << std::endl;
-
-		//Increase total computation time
-		totalTime+=exTime;
 
 		std::cout <<"saving pointcloud :" << outputFn<<"\n";
-		pcl::io::savePCDFile(outputFn, *outputCloud,Eigen::Vector4f::Zero (),Eigen::Quaternionf::Identity (), true );
-
+		saveASC(outputFn, inputCloud);
 
 		//rewrite some data from input model to ouput model -
 		///TODO copying
 		Eigen::Matrix4f tr;
 		inputModel.getAffine(cloud_ids[i], tr);
 		outputModel.setAffine(cloud_ids[i], tr);
-		outputModel.setPointcloudName(cloud_ids[i], inputFn.filename().string());
-
-		//save results
-		outputModel.setResult(cloud_ids[i], "size_before_subsample",inputCloud->height*inputCloud->width);
-		outputModel.setResult(cloud_ids[i], "size_after_subsample",outputCloud->height*outputCloud->width);
-		outputModel.setResult(cloud_ids[i], "execution_time", exTime);
-		outputModel.setResult(cloud_ids[i], "cummulative_filter_time", totalTime);
-
+		outputModel.setPointcloudName(cloud_ids[i], outputFnOnly);
 	}
-
+	
 
 	outputModel.saveFile(param_outputModel);
 

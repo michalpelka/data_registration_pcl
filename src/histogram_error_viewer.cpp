@@ -79,13 +79,19 @@ void createMetascan (data_model &model, pcl::PointCloud<PointT> &pc)
 int main (int argc, char** argv)
 {
 	
+	bool skip_metamodel = false;
 	bool skip_registration = false;
 	
 	pcl::PointCloud<PointT> submetascanTarget;
 	pcl::PointCloud<PointT> alignedSourceMetascan;
+	std::cout << "usage : inputModel1 inputModel2 option\n";
+	std::cout << "options : metamodel,register, evaluate\n";
+	
+	std::string option = argv[3];
 
-	if (!skip_registration)
+	if (option.compare("metamodel")==0)
 	{
+		std::cout << "Metascan will be created\n";
 		std::string modelSourceFn = argv[1];
 		std::string modelTargetFn = argv[2];
 
@@ -104,19 +110,51 @@ int main (int argc, char** argv)
 
 		createMetascan(modelSource, metascanSource);
 		createMetascan(modelTarget, metascanTarget);
+	
+		pcl::VoxelGrid<PointT> sor;
+		
+		sor.setInputCloud(metascanSource.makeShared());
+		sor.setLeafSize(0.2,0.2,0.2);
+		sor.filter(metascanSource);
+
+
+		sor.setInputCloud(metascanTarget.makeShared());
+		sor.setLeafSize(0.2,0.2,0.2);
+		sor.filter(metascanTarget);
+	
 		// saving metascan - in lcoal cooridanate system - for manula registration in CloudCompare
-		pcl::io::savePCDFile ("metaSource.pcd", metascanSource);
-		pcl::io::savePCDFile ("metaTarget.pcd", metascanTarget);
+		pcl::io::savePCDFile ("metaSource.pcd", metascanSource,true);
+		pcl::io::savePCDFile ("metaTarget.pcd", metascanTarget,true);
+		return 0;
+	}
 
-
-
+	if (option.compare("register")==0)
+	{
+		std::cout << "Metascan will be registered\n";
+		pcl::PointCloud<PointT> metascanSource;
+		pcl::PointCloud<PointT> metascanTarget;
+		
 		Eigen::Affine3f SourceGlobalMatrix, TargetGlobalMatrix;
 		SourceGlobalMatrix = Eigen::Affine3f::Identity();
 		TargetGlobalMatrix = Eigen::Affine3f::Identity();
-		modelSource.getGlobalModelMatrix(SourceGlobalMatrix.matrix());
-		modelTarget.getGlobalModelMatrix(TargetGlobalMatrix.matrix());	
-		pcl::transformPointCloudWithNormals(metascanSource,metascanSource, SourceGlobalMatrix);
-		pcl::transformPointCloudWithNormals(metascanTarget,metascanTarget, TargetGlobalMatrix);
+
+
+		pcl::io::loadPCDFile ("metaSource.pcd", metascanSource);
+		pcl::io::loadPCDFile ("metaTarget.pcd", metascanTarget);
+
+		
+		SourceGlobalMatrix.translate(Eigen::Vector3f(metascanSource.sensor_origin_[0],metascanSource.sensor_origin_[1],metascanSource.sensor_origin_[2]));
+		SourceGlobalMatrix.rotate(metascanSource.sensor_orientation_);
+
+		
+		TargetGlobalMatrix.translate(Eigen::Vector3f(metascanTarget.sensor_origin_[0],metascanTarget.sensor_origin_[1],metascanTarget.sensor_origin_[2]));
+		TargetGlobalMatrix.rotate(metascanTarget.sensor_orientation_);
+
+		//modelSource.getGlobalModelMatrix(SourceGlobalMatrix.matrix());
+		//modelTarget.getGlobalModelMatrix(TargetGlobalMatrix.matrix());	
+	
+		pcl::transformPointCloudWithNormals(metascanSource,metascanSource, SourceGlobalMatrix.inverse());
+		pcl::transformPointCloudWithNormals(metascanTarget,metascanTarget, TargetGlobalMatrix.inverse());
 
 		// subsample data for final registration
 
@@ -126,12 +164,12 @@ int main (int argc, char** argv)
 		pcl::VoxelGrid<PointT> sor;
 		
 		sor.setInputCloud(metascanSource.makeShared());
-		sor.setLeafSize(0.125,0.125,0.125);
+		sor.setLeafSize(0.5,0.5,0.5);
 		sor.filter(submetascanSource);
 
 
 		sor.setInputCloud(metascanTarget.makeShared());
-		sor.setLeafSize(0.125,0.125,0.125);
+		sor.setLeafSize(0.5,0.5,0.5);
 		sor.filter(submetascanTarget);
 	
 		// icp 
@@ -140,8 +178,8 @@ int main (int argc, char** argv)
 		pcl::IterativeClosestPoint <PointT,PointT> icp;
 		icp.setInputSource(submetascanSource.makeShared());
 		icp.setInputTarget(submetascanTarget.makeShared());
-		icp.setMaxCorrespondenceDistance(0.3);
-		icp.setMaximumIterations(200);
+		icp.setMaxCorrespondenceDistance(1.2);
+		icp.setMaximumIterations(150);
 		icp.align(alignedSourceMetascan);
 		std::cout <<"icp fitness score " << icp.getFitnessScore() <<"\n";
 
@@ -149,12 +187,13 @@ int main (int argc, char** argv)
 		pcl::io::savePCDFile("submetascanTarget.pcd",submetascanTarget);
 		pcl::io::savePCDFile("alignedSourceMetascan.pcd",alignedSourceMetascan);
 	}
-	else
-	{
-		std::cout << "registration skipped - remove submetascanTarget.pcd and alignedSourceMetascan.pcd to prevent skipping \n";
-		pcl::io::loadPCDFile("submetascanTarget.pcd",submetascanTarget);
-		pcl::io::loadPCDFile("alignedSourceMetascan.pcd",alignedSourceMetascan);
-	}
+	
+
+	std::cout << "Metascan will be compared\n";
+
+	pcl::io::loadPCDFile("submetascanTarget.pcd",submetascanTarget);
+	pcl::io::loadPCDFile("alignedSourceMetascan.pcd",alignedSourceMetascan);
+	
 
 
 	// kdtrees
@@ -164,7 +203,7 @@ int main (int argc, char** argv)
 	std::vector <double> distances;
 	std::vector <double> normalAngles;
 
-	double radius = 0.5;
+	double radius = 12;
 
 	treeAlignedSourceMetascan->setInputCloud(alignedSourceMetascan.makeShared());
 	for (int i=0; i < submetascanTarget.size(); i++)
@@ -178,7 +217,7 @@ int main (int argc, char** argv)
 		{
 			int i = indices[0];
 			Eigen::Vector4f  qN = alignedSourceMetascan[i].getNormalVector4fMap();
-			if (sqrdistance[0]<(0.5*0.5))
+			if (sqrdistance[0]<(radius*radius))
 			{
 				
 				distances.push_back(sqrt(sqrdistance[0]));

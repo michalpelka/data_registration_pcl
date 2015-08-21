@@ -70,3 +70,13 @@ target_link_libraries (get_scan_name ${PCL_LIBRARIES})
 add_executable (compute_normals src/compute_normals.cpp ${DATA_FRAMEWORK_SOURCES})
 target_link_libraries (compute_normals ${PCL_LIBRARIES})
 
+add_executable (generate_3d_files src/generate_3d_files.cpp ${DATA_FRAMEWORK_SOURCES})
+target_link_libraries (generate_3d_files ${PCL_LIBRARIES})
+
+
+add_executable (convert_to_asc src/convert_to_asc.cpp ${DATA_FRAMEWORK_SOURCES})
+target_link_libraries (convert_to_asc ${PCL_LIBRARIES})
+
+#add_executable (generate_mesh src/generate_mesh ${DATA_FRAMEWORK_SOURCES})
+#target_link_libraries (generate_mesh ${PCL_LIBRARIES})
+
