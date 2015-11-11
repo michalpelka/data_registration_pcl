@@ -46,7 +46,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include "dataFramework/data_model.hpp"
 
-typedef pcl::PointXYZ PointT;
+typedef pcl::PointXYZRGB PointT;
 pcl::visualization::PCLVisualizer p;
 std::vector<pcl::PointCloud<PointT>::Ptr> pcs;
 std::vector<std::string> pcsName;
@@ -62,7 +62,7 @@ void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event, void
 		{
 			*metascan+=*pcs[i];
 		}
-		pcl::io::savePCDFile("metascan.pcd",*metascan);
+		pcl::io::savePCDFile("metascan.pcd",*metascan, true);
 
 	}
 
@@ -72,7 +72,7 @@ void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event, void
 		p.removeAllPointClouds();
 		for (int i=0; i < pcs.size(); i++)
 		{	
-			p.addPointCloud(pcs[i], pcsName[i]);
+			p.addPointCloud<PointT>(pcs[i], pcsName[i]);
 		}		
 	}
 	if (event.getKeySym()=="2" && event.keyUp())
@@ -113,7 +113,7 @@ void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event, void
 			}
 			else
 			{
-				p.addPointCloud(pcs[i], pcsName[i]);
+				p.addPointCloud<PointT>(pcs[i], pcsName[i]);
 			}
 		}
 
@@ -174,7 +174,9 @@ int main (int argc, char** argv)
 			pc->sensor_orientation_ = Eigen::Quaternionf::Identity();
 
 			pcl::transformPointCloud(*pc,*pc, transform);
-			p.addPointCloud(pc, indices[i]);
+                        pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(pc);
+                        
+			p.addPointCloud<PointT>(pc, rgb, indices[i]);
 			pcs.push_back(pc);
 			pcsName.push_back(indices[i]);
 		}		

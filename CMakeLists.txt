@@ -70,3 +70,14 @@ target_link_libraries (get_scan_name ${PCL_LIBRARIES})
 add_executable (compute_normals src/compute_normals.cpp ${DATA_FRAMEWORK_SOURCES})
 target_link_libraries (compute_normals ${PCL_LIBRARIES})
 
+add_executable (copy_metadata src/copy_metadata.cpp ${DATA_FRAMEWORK_SOURCES})
+target_link_libraries (copy_metadata ${PCL_LIBRARIES})
+
+#########################################################
+# Open CV
+#########################################################
+
+find_package( OpenCV REQUIRED )
+
+add_executable (find_georeference src/find_georeference.cpp ${DATA_FRAMEWORK_SOURCES})
+target_link_libraries (find_georeference ${PCL_LIBRARIES} ${OpenCV_LIBS})

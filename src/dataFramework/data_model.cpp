@@ -67,8 +67,8 @@
 	bool data_model::saveFile(std::string fn)
     {
 		//caused problems on VS2010, BOOST 1.55
-        //boost::property_tree::write_xml(fn, pt_, std::locale(), boost::property_tree::xml_writer_make_settings<char>(' ', 1u));
-		boost::property_tree::write_xml(fn, pt_, std::locale(), boost::property_tree::xml_writer_make_settings<std::string>(' ', 1u));
+                boost::property_tree::write_xml(fn, pt_, std::locale(), boost::property_tree::xml_writer_make_settings<char>(' ', 1));
+		//boost::property_tree::write_xml(fn, pt_, std::locale(), boost::property_tree::xml_writer_make_settings<std::string>(' ', 1u));
 
 		xmlPath = boost::filesystem::path(fn);
 		return true;
@@ -147,7 +147,7 @@
 			/*ss>>matrix(0,0)>>matrix(0,1)>>matrix(0,2)>>matrix(0,3);
 			ss>>matrix(1,0)>>matrix(1,1)>>matrix(1,2)>>matrix(1,3);
 			ss>>matrix(2,0)>>matrix(2,1)>>matrix(2,2)>>matrix(2,3);
-			ss>>matrix(3,0)>>matrix(3,1)>>matrix(3,2)>>matrix(3,3);*/
+			ss>>mmatrix(3,0)>>matrix(3,1)>>matrix(3,2)>>matrix(3,3);*/
 			Eigen::Affine3f ff;
 			ff.matrix() = matrix;
 			origin = ff.translation();
@@ -362,8 +362,32 @@
     bool data_model::getTimestamp (std::string scanId, boost::posix_time::ptime &ts)
     {
        if (!checkIfExists("Model.Transformations."+scanId+".timestamp")) return false;
-       std::string isoTime;
-       pt_.get("Model.Transformations."+scanId+".timestamp", isoTime);
+       std::string isoTime = pt_.get<std::string>("Model.Transformations."+scanId+".timestamp");
        ts = boost::posix_time::from_iso_string(isoTime);
        return true;
     }
+
+
+	void data_model::setPhoto (std::string scanId, std::string fn)
+	{
+		 pt_.put("Model.Transformations."+scanId+".photo", fn);
+		 pt_.put("Model.Transformations."+scanId+".photo360", fn);
+	}
+    bool data_model::getPhoto (std::string scanId, std::string &fn)
+	{
+		if (!checkIfExists("Model.Transformations."+scanId+".photo")) return false;
+		fn = pt_.get<std::string>("Model.Transformations."+scanId+".photo");
+		return true;
+	}
+
+	void data_model::setGPS (std::string scanId, std::string gps)
+	{
+		pt_.put("Model.Transformations."+scanId+".gps", gps);
+	}
+    bool data_model::getGPS (std::string scanId, std::string &gps)
+	{
+		if (!checkIfExists("Model.Transformations."+scanId+".gps")) return false;
+		gps = pt_.get<std::string>("Model.Transformations."+scanId+".gps");
+	
+		return true;
+	}

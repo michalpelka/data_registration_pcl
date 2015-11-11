@@ -160,19 +160,20 @@ int main (int argc, char **argv)
 				pcl::registration::CorrespondenceEstimation<PointType, PointType> ce;
 				ce.setInputTarget (clouds[i]);
 				ce.setInputCloud (clouds[j]);
+				
 				pcl::CorrespondencesPtr corr (new pcl::Correspondences);
 				ce.determineCorrespondences (*corr, threshold_determine_correspondences);
 
 				if (corr->size () > (float(clouds[j]->size()) * threshold_overlap) )
 				{				  
 					lum.setCorrespondences (j, i, corr);
-					std::cout << "add connection between " << i << " (" << cloudIds[i] << ") and " << j << " (" << cloudIds[j] << ")" << std::endl;
+					std::cout << "add connection between " << i << " (" << cloudIds[i] << ") and " << j << " (" << cloudIds[j] << ") corr size :" << corr << std::endl;
 				}
 			}
 
 		}
 	}
-
+	printf("Start LUM Compute\n");
 	lum.compute();
 
 	for(size_t i = 0; i < lum.getNumVertices (); i++)

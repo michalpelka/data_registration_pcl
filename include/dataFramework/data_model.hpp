@@ -48,7 +48,12 @@
 class data_model
 {
 public:
-	
+	data_model clone()
+	{
+		data_model r;
+		r.pt_ = pt_;
+		return r;
+	}
 	/// loads XML file containing set of transformations
 	bool loadFile(std::string fn);
 	/// saveFileves XML set of transformations
@@ -60,6 +65,7 @@ public:
 	///get pointcloudName
 	bool getPointcloudName (std::string scanId, std::string &fn);
 	
+
 	std::string getFullPathOfPointcloud(std::string id);
 
 
@@ -89,9 +95,18 @@ public:
 	void getGlobalModelMatrix(Eigen::Matrix4f &matrix);
 	void setGlobalModelMatrix(Eigen::Matrix4f matrix);
 
+
     void setTimestamp (std::string scanId, boost::posix_time::ptime ts);
     bool getTimestamp (std::string scanId, boost::posix_time::ptime &ts);
 
+	void setPhoto (std::string scanId, std::string fn);
+    bool getPhoto (std::string scanId, std::string &fn);
+
+	void setGPS (std::string scanId, std::string gps);
+    bool getGPS (std::string scanId, std::string &gps);
+
+
+	
 private:
 	boost::property_tree::ptree pt_;
 
