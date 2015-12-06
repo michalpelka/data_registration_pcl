@@ -221,8 +221,8 @@ int main (int argc, char * argv [])
 	}
 	
 	PCLPlotter *plotter = new PCLPlotter ("LuM Viewer");
-    plotter->setShowLegend (true);
-
+        //plotter->setShowLegend (true);
+        
 	
 
 	//pcl::console::parse_argument (argc, argv, "-i", lumIter);

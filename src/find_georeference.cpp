@@ -190,6 +190,7 @@ int main (int argc, char** argv)
             tr.getGPS(ids[i], gps);
             std::stringstream(gps)>>lat>>lon;
             double northing,easting;
+            lon = fmod(lon,6.0);
             UTM::LLtoUTM(lat,lon,northing,easting, UTM_zone);
             coord_utm[i].x=northing;
             coord_utm[i].y=easting;

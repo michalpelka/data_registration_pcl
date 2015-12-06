@@ -73,6 +73,9 @@ target_link_libraries (compute_normals ${PCL_LIBRARIES})
 add_executable (copy_metadata src/copy_metadata.cpp ${DATA_FRAMEWORK_SOURCES})
 target_link_libraries (copy_metadata ${PCL_LIBRARIES})
 
+add_executable (icp_demo src/icp_demo.cpp ${DATA_FRAMEWORK_SOURCES})
+target_link_libraries (icp_demo ${PCL_LIBRARIES})
+
 #########################################################
 # Open CV
 #########################################################
