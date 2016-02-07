@@ -292,7 +292,8 @@ transformed source index is smaller than the given inlier distance threshold.\tD
 	outputXML.addAlgorithmParam("isUseMetascan",isUseMetascan);
 	outputXML.addAlgorithmParam("RANSACIterations",RANSACIterations);
 	outputXML.addAlgorithmParam("TransformationEpsilon",TransformationEpsilon);
-
+        
+   
 
 	std::string dataPath;
 	inputXML.getDataSetPath(dataPath);
@@ -314,6 +315,7 @@ transformed source index is smaller than the given inlier distance threshold.\tD
 	inputXML.getPointcloudName(indices[0], pcdFileNameOnly); 
 	pcl::io::loadPCDFile(fn,tmp);
 	inputXML.getAffine(indices[0],lastGlobalOdom.matrix()),
+        outputXML.getAffine(indices[0],lastGlobalOdom.matrix()),        
 	pcl::transformPointCloud(tmp,tmp, lastGlobalOdom);
 	lastFit = lastGlobalOdom;
 	metascan += tmp;

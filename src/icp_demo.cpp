@@ -55,7 +55,8 @@
 #include <pcl/registration/icp.h>
 
 #include "dataFramework/data_model.hpp"
-
+#include <pcl/registration/transformation_estimation.h>
+#include <pcl-1.7/pcl/registration/transformation_estimation_svd.h>
 #include "dataFramework/viewerLog.hpp"
 #include <pcl/common/time.h>
 #include <pcl/visualization/pcl_visualizer.h>
@@ -278,6 +279,7 @@ transformed source index is smaller than the given inlier distance threshold.\tD
         v.addPointCloud(p2, source_cloud_color_p2, "p2");
 
         v.registerKeyboardCallback (keyboardEventOccurred, (void*)&v);
+        v.setBackgroundColor(1,1,1);
         v.spin();
         
 	
