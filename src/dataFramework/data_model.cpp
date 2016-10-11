@@ -66,9 +66,7 @@
 
 	bool data_model::saveFile(std::string fn)
     {
-		//caused problems on VS2010, BOOST 1.55
-                boost::property_tree::write_xml(fn, pt_, std::locale(), boost::property_tree::xml_writer_make_settings<char>(' ', 1));
-		//boost::property_tree::write_xml(fn, pt_, std::locale(), boost::property_tree::xml_writer_make_settings<std::string>(' ', 1u));
+		boost::property_tree::write_xml(fn, pt_, std::locale(), boost::property_tree::xml_writer_make_settings<std::string>('\t', 1));
 
 		xmlPath = boost::filesystem::path(fn);
 		return true;
