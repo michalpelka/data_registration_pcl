@@ -76,6 +76,15 @@ target_link_libraries (copy_metadata ${PCL_LIBRARIES})
 add_executable (icp_demo src/icp_demo.cpp ${DATA_FRAMEWORK_SOURCES})
 target_link_libraries (icp_demo ${PCL_LIBRARIES})
 
+add_executable (add_noise src/add_noise.cpp ${DATA_FRAMEWORK_SOURCES})
+target_link_libraries (add_noise ${PCL_LIBRARIES})
+
+add_executable (get_errors src/get_errors.cpp ${DATA_FRAMEWORK_SOURCES})
+target_link_libraries (get_errors ${PCL_LIBRARIES})
+
+add_executable (reaplace_data_path src/reaplace_data_path.cpp ${DATA_FRAMEWORK_SOURCES})
+target_link_libraries (reaplace_data_path ${PCL_LIBRARIES})
+
 #########################################################
 # Open CV
 #########################################################

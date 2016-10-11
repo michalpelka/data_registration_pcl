@@ -142,7 +142,7 @@ int main (int argc, char** argv)
 	}
 	std::string model_file = argv[1];
 	
-
+        p.setBackgroundColor(1,1,1);
 	p.setWindowName(model_file);
 	data_model dSets;
 	dSets.loadFile(model_file);
