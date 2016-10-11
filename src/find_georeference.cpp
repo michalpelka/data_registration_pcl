@@ -47,7 +47,9 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
-#include <opencv2/highgui/highgui.hpp>
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
 #include <iomanip>
 
 typedef pcl::PointXYZRGBA PointT;
