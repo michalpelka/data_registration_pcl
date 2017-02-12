@@ -47,9 +47,8 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 #include <iomanip>
 
 typedef pcl::PointXYZRGBA PointT;
@@ -164,7 +163,7 @@ int main (int argc, char** argv)
 	std::vector<std::string> ids;
         
         
-        char UTM_zone[3];
+        char UTM_zone[4];
 	tr.getAllScansId(ids);
         pcl::PointCloud<PointT> coord_local;
         pcl::PointCloud<PointT> coord_utm;
@@ -203,6 +202,7 @@ int main (int argc, char** argv)
             std::cout << i << ":"<<ids[i]<<"\n";
             std::cout << "\tlocal:"<<coord_local[i].x << "\t" <<coord_local[i].y <<"\n";
             std::cout << "\tutm:"<<coord_utm[i].x << "\t" <<coord_utm[i].y <<"\n";
+            std::cout << "\tzone:"<<UTM_zone<<"\n";
         }
 
         pcl::registration::TransformationEstimationSVD <PointT,PointT> est;
@@ -210,6 +210,9 @@ int main (int argc, char** argv)
         est.estimateRigidTransformation(coord_local, coord_utm, mat);
         std::cout << "local to utm transformation matrix :\n";
         std::cout << mat<<"\n";
+        
+        std::cout << "UTM Zone :\n";
+        std::cout << UTM_zone << '\n';
         //read data
         pcl::PointCloud<PointT> metamodel;
         std::vector<pcl::PointCloud<PointT>::Ptr> clouds;
@@ -329,12 +332,13 @@ int main (int argc, char** argv)
         std::cout << "\tc4:\n" <<utm_c4 <<"\n";
         
         //wsg 84
+        char UTM_zone2[]="34U";
         std::cout << "utm zone" << UTM_zone << "\n";
         std::vector<pcl::PointXY> quadCoordinates(4);
-        UTM::UTMtoLL(utm_c1[0], utm_c1[1], UTM_zone,quadCoordinates[0].x, quadCoordinates[0].y  );
-        UTM::UTMtoLL(utm_c2[0], utm_c2[1], UTM_zone,quadCoordinates[1].x, quadCoordinates[1].y  );
-        UTM::UTMtoLL(utm_c3[0], utm_c3[1], UTM_zone,quadCoordinates[2].x, quadCoordinates[2].y  );
-        UTM::UTMtoLL(utm_c4[0], utm_c4[1], UTM_zone,quadCoordinates[3].x, quadCoordinates[3].y  );
+        UTM::UTMtoLL(utm_c1[0], utm_c1[1], UTM_zone2,quadCoordinates[0].x, quadCoordinates[0].y  );
+        UTM::UTMtoLL(utm_c2[0], utm_c2[1], UTM_zone2,quadCoordinates[1].x, quadCoordinates[1].y  );
+        UTM::UTMtoLL(utm_c3[0], utm_c3[1], UTM_zone2,quadCoordinates[2].x, quadCoordinates[2].y  );
+        UTM::UTMtoLL(utm_c4[0], utm_c4[1], UTM_zone2,quadCoordinates[3].x, quadCoordinates[3].y  );
         
         std::cout << quadCoordinates[3] <<"\n";
         std::cout << quadCoordinates[2] <<"\n";
